@@ -223,15 +223,19 @@ func (c *Client) handleErrors(errors chan error) {
 }
 
 func (c *Client) handleConnection(messages chan json.RawMessage, errors chan error) {
+	i := 0
 	for {
+		i++
 		msg := json.RawMessage{}
-		if err := c.Conn.ReadJSON(&msg); err != nil {
+		if err := c.Conn.ReadJSON(&msg); err != nil || i%5 == 0 {
 			switch err.(type) {
 			case *websocket.CloseError:
-				errors <- fmt.Errorf("Websocket connection closed: %s", err)
+				errors <- fmt.Errorf("Websocket connection closed: %w", err)
 				return
 			default:
-				errors <- fmt.Errorf("Couldn't read JSON from websocket connection: %s", err)
+				a := 12
+				err := json.Unmarshal([]byte("{}"), &a)
+				errors <- fmt.Errorf("Couldn't read JSON from websocket connection: %w", fmt.Errorf("double %w", err))
 				continue
 			}
 		}

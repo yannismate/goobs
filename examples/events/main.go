@@ -1,12 +1,14 @@
 package main
 
 import (
+	"errors"
 	"fmt"
 	"log"
 	"os"
 
 	"github.com/andreykaipov/goobs"
 	"github.com/andreykaipov/goobs/api/events"
+	"github.com/gorilla/websocket"
 )
 
 type logger struct{}
@@ -37,9 +39,14 @@ func main() {
 	for event := range client.IncomingEvents {
 		switch e := event.(type) {
 		case *events.Error:
-			log.Printf("Got an error: %s", e.Err)
+			var err *websocket.CloseError
+			if errors.As(e.Err, &err) {
+				log.Fatal("Connection was closed")
+			}
+
+			log.Printf("Got some other error: %s", e.Err)
 		default:
-			log.Printf("Unhandled event: %#v", e.GetUpdateType())
+			log.Printf("Unhandled event: %q", e.GetUpdateType())
 		}
 	}
 }
